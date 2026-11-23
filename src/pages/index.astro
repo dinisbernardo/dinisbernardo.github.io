@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ReviewCard from '../components/ReviewCard.astro';
+import { profile } from '../data/profile';
+import { getReviews } from '../lib/reviews';
+import { url } from '../lib/url';
+
+const latest = (await getReviews()).slice(0, 3);
+---
+
+<BaseLayout current="home">
+  <section class="hero">
+    <div class="hero-text">
+      <h1>{profile.name}</h1>
+      <p>{profile.tagline}</p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href={url('profile/')}>View profile</a>
+        <a class="btn" href={url('reviews/')}>Read reviews</a>
+      </div>
+    </div>
+    {
+      profile.photo ? (
+        <img class="avatar" src={url(profile.photo)} alt={`Photo of ${profile.name}`} width="240" height="240" />
+      ) : (
+        <div class="avatar placeholder" style="width:240px;height:240px" aria-hidden="true">[ Your photo ]</div>
+      )
+    }
+  </section>
+
+  <section class="site-sections" aria-labelledby="sections-h">
+    <h2 id="sections-h">On this site</h2>
+    <div class="site-sections-grid">
+      <a class="tile section-tile" href={url('reviews/')}>
+        <span class="name">Reviews</span>
+        <span class="desc">Full reviews of the games I play, with score, platform and how much of the game I completed.</span>
+        <span class="foot" aria-hidden="true">→</span>
+      </a>
+      <a class="tile section-tile" href={url('profile/')}>
+        <span class="name">Profile</span>
+        <span class="desc">About me, education, skills and CV.</span>
+        <span class="foot" aria-hidden="true">→</span>
+      </a>
+      <div class="tile section-tile is-soon">
+        <span class="name">Projects</span>
+        <span class="desc">Games and other things I've built.</span>
+        <span class="foot">Coming soon</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="latest-h">
+    <div class="block-head">
+      <h2 id="latest-h" class="section-title">Latest reviews</h2>
+      <a class="link" href={url('reviews/')} style="font-size:15px">All reviews →</a>
+    </div>
+    {
+      latest.length > 0 ? (
+        <div class="review-grid">
+          {latest.map((review) => (
+            <ReviewCard review={review} showSummary={false} />
+          ))}
+        </div>
+      ) : (
+        <p class="empty-state">No reviews yet.</p>
+      )
+    }
+  </section>
+</BaseLayout>

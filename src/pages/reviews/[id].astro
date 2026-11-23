@@ -1,0 +1,95 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Cover from '../../components/Cover.astro';
+import { formatDate, formatScore, getReviews, type Review } from '../../lib/reviews';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const reviews = await getReviews();
+  return reviews.map((review) => ({ params: { id: review.id }, props: { review } }));
+}
+
+interface Props {
+  review: Review;
+}
+
+const { review } = Astro.props;
+const { title, summary, score, platform, date, completion, hours, pros, cons, draft } = review.data;
+const { Content } = await render(review);
+---
+
+<BaseLayout title={`${title} review`} description={summary} current="reviews">
+  <article class="review">
+    <a class="back" href={url('reviews/')}>← All reviews</a>
+
+    <header class="review-head">
+      <p class="meta">
+        Review · <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        {draft && ' · Draft'}
+      </p>
+      <h1 class="page-title">{title}</h1>
+      <p class="lead">{summary}</p>
+    </header>
+
+    <Cover review={review} label="Game key art" eager />
+
+    <dl class="facts">
+      <div>
+        <dt>Score</dt>
+        <dd class="score">{formatScore(score)}/10</dd>
+      </div>
+      <div>
+        <dt>Played on</dt>
+        <dd>{platform}</dd>
+      </div>
+      {
+        completion && (
+          <div>
+            <dt>Completion</dt>
+            <dd>{completion}</dd>
+          </div>
+        )
+      }
+      {
+        hours && (
+          <div>
+            <dt>Time played</dt>
+            <dd>{hours} h</dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {
+      (pros.length > 0 || cons.length > 0) && (
+        <section class="verdict" aria-label="Pros and cons">
+          {pros.length > 0 && (
+            <div class="tile">
+              <h2>What works</h2>
+              <ul>
+                {pros.map((p) => (
+                  <li>{p}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {cons.length > 0 && (
+            <div class="tile">
+              <h2>What doesn't</h2>
+              <ul>
+                {cons.map((c) => (
+                  <li>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )
+    }
+  </article>
+</BaseLayout>

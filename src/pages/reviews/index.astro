@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Cover from '../../components/Cover.astro';
+import ReviewCard from '../../components/ReviewCard.astro';
+import { profile } from '../../data/profile';
+import { formatDate, formatScore, getReviews } from '../../lib/reviews';
+import { url } from '../../lib/url';
+
+const reviews = await getReviews();
+const featured = reviews[0];
+const platforms = ['All', ...new Set(reviews.map((r) => r.data.platform))];
+---
+
+<BaseLayout title="Reviews" current="reviews" description="Game reviews by Dinis.">
+  <section class="page-head">
+    <h1 class="page-title">Reviews</h1>
+    <p class="lead">
+      I review games after finishing them, usually to 100%. [A line about what you review: genres, new releases, retro.]
+    </p>
+  </section>
+
+  {
+    featured && (
+      <section style="padding-bottom:80px" aria-labelledby="featured-h">
+        <a class="card tile featured" href={url(`reviews/${featured.id}/`)}>
+          <Cover review={featured} label="Game key art" eager />
+          <div class="featured-text">
+            <p class="muted" style="font-size:14px">Latest review · {formatDate(featured.data.date)}</p>
+            <h2 id="featured-h" class="card-title">{featured.data.title}</h2>
+            <p class="summary">{featured.data.summary}</p>
+            <dl class="facts">
+              <div>
+                <dt>Score</dt>
+                <dd class="score">{formatScore(featured.data.score)}/10</dd>
+              </div>
+              <div>
+                <dt>Played on</dt>
+                <dd>{featured.data.platform}</dd>
+              </div>
+              {featured.data.completion && (
+                <div>
+                  <dt>Completion</dt>
+                  <dd>
+                    {featured.data.completion}
+                    {featured.data.hours && ` · ${featured.data.hours} h`}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </a>
+      </section>
+    )
+  }
+
+  <section style="padding-bottom:96px" aria-labelledby="all-h">
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <h2 id="all-h" class="section-title">All reviews</h2>
+        <span class="muted" style="font-size:15px" data-count>
+          {reviews.length === 1 ? '1 review' : `${reviews.length} reviews`}
+        </span>
+      </div>
+      <div class="toolbar-controls">
+        <div class="chips" role="group" aria-label="Filter by platform">
+          {
+            platforms.map((p, i) => (
+              <button type="button" class="chip" data-filter={p} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {p}
+              </button>
+            ))
+          }
+        </div>
+        <div class="sort">
+          <label for="sort">Sort</label>
+          <select id="sort" data-sort>
+            <option value="latest">Latest</option>
+            <option value="score">Highest score</option>
+            <option value="az">A–Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-grid" data-review-grid>
+      {reviews.map((review) => <ReviewCard review={review} />)}
+    </div>
+    <p class="empty-state" data-empty hidden={reviews.length > 0}>No reviews for this platform yet.</p>
+  </section>
+
+  <section class="scale" aria-labelledby="scale-h">
+    <div class="scale-intro">
+      <h2 id="scale-h">How I score</h2>
+      <p class="soft" style="font-size:16px;line-height:1.55">{profile.scoring.intro}</p>
+    </div>
+    <dl class="scale-list">
+      {
+        profile.scoring.scale.map((s) => (
+          <div class="tile">
+            <dt>{s.range}</dt>
+            <dd>{s.meaning}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+</BaseLayout>
+
+<script>
+  const grid = document.querySelector<HTMLElement>('[data-review-grid]');
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+  const sortSelect = document.querySelector<HTMLSelectElement>('[data-sort]');
+  const count = document.querySelector<HTMLElement>('[data-count]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+
+  let filter = 'All';
+
+  function apply() {
+    if (!grid) return;
+    const cards = [...grid.querySelectorAll<HTMLElement>('[data-card]')];
+    const sort = sortSelect?.value ?? 'latest';
+
+    cards.sort((a, b) => {
+      if (sort === 'score') return Number(b.dataset.score) - Number(a.dataset.score);
+      if (sort === 'az') return (a.dataset.title ?? '').localeCompare(b.dataset.title ?? '');
+      return Number(b.dataset.date) - Number(a.dataset.date);
+    });
+
+    let shown = 0;
+    for (const card of cards) {
+      const visible = filter === 'All' || card.dataset.platform === filter;
+      card.hidden = !visible;
+      if (visible) shown++;
+      grid.appendChild(card);
+    }
+
+    if (count) count.textContent = shown === 1 ? '1 review' : `${shown} reviews`;
+    if (empty) empty.hidden = shown !== 0;
+  }
+
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      filter = chip.dataset.filter ?? 'All';
+      for (const other of chips) other.setAttribute('aria-pressed', String(other === chip));
+      apply();
+    });
+  }
+
+  sortSelect?.addEventListener('change', apply);
+</script>

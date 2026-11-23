@@ -1,0 +1,32 @@
+---
+import { Image } from 'astro:assets';
+import type { Review } from '../lib/reviews';
+
+interface Props {
+  review: Review;
+  label?: string;
+  eager?: boolean;
+}
+
+const { review, label = 'Cover', eager = false } = Astro.props;
+const { cover, coverAlt, title } = review.data;
+---
+
+<div class="cover-frame">
+  {
+    cover ? (
+      <Image
+        src={cover}
+        alt={coverAlt ?? `${title} cover art`}
+        widths={[480, 960, 1440]}
+        sizes="(max-width: 700px) 100vw, 720px"
+        loading={eager ? 'eager' : 'lazy'}
+      />
+    ) : (
+      <div class="placeholder" aria-hidden="true">
+        [ {label} ]
+      </div>
+    )
+  }
+  <slot />
+</div>

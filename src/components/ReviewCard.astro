@@ -1,0 +1,33 @@
+---
+import Cover from './Cover.astro';
+import { formatDate, formatScore, type Review } from '../lib/reviews';
+import { url } from '../lib/url';
+
+interface Props {
+  review: Review;
+  showSummary?: boolean;
+}
+
+const { review, showSummary = true } = Astro.props;
+const { title, platform, date, score, summary, completion } = review.data;
+---
+
+<a
+  href={url(`reviews/${review.id}/`)}
+  class="card review-card"
+  data-card
+  data-platform={platform}
+  data-score={score}
+  data-title={title}
+  data-date={date.valueOf()}
+>
+  <Cover review={review}>
+    <span class="score-badge" aria-label={`Score ${formatScore(score)} out of 10`}>{formatScore(score)}</span>
+  </Cover>
+  <div>
+    <div class="meta">{platform} · {formatDate(date)}</div>
+    <div class="card-title">{title}</div>
+    {showSummary && <p class="summary">{summary}</p>}
+    {completion && <div class="completion">Completion {completion}</div>}
+  </div>
+</a>
