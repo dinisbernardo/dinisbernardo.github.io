@@ -1,6 +1,6 @@
-# Site pessoal — Dinis
+# Site pessoal
 
-Site feito com [Astro](https://astro.build), com a ajuda do ClaudeCode (Opus5.5).
+feito com [Astro](https://astro.build), com a ajuda do ClaudeCode (Opus5.5).
 
 ## Começar
 

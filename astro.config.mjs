@@ -6,5 +6,5 @@ import { defineConfig } from 'astro/config';
 // - Any other repo name (e.g. "GameIndustryWebsite"): set base to '/<repo-name>'.
 export default defineConfig({
   site: 'https://dinisbernardo.github.io',
-  base: '/',
+  base: '/site',
 });
